@@ -63,8 +63,10 @@ function startUp()
 						modifier = getRandom(0, 6); // 5 = targeted, 6 = beam
 						break;
 					case 3:
-						modifier = getRandom(0, 7); // 7 = armor
+						modifier = getRandom(0, 7); // 7 = Status
 						break;
+					default:
+						console.log("invalid spell level.");
 				}
 				if (checkSpellModifier(spell, modifier))
 				{
@@ -137,12 +139,12 @@ function startUp()
 				}
 				else if (mod == 6) // check for conflicts with beam
 				{
-					if (spell.type[i] == 0 || spell.type[i] == 4 || spell.type[i] == 5 )
+					if (spell.type[i] == 0 || spell.type[i] == 4 || spell.type[i] == 5)
 					{
 						valid = false;
 					}
 				}
-				else if (mod == 7) // check for conflicts with armor
+				else if (mod == 7) // check for conflicts with Status
 				{
 					if (false)
 					{
@@ -209,7 +211,7 @@ function startUp()
 					readableSpells += ("Beam");
 					break;
 				case 7:
-					readableSpells += ("Armor");
+					readableSpells += ("Status");
 					break;
 				default:
 					readableSpells += ("Level range error");
