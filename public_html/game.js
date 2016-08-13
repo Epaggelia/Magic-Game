@@ -57,13 +57,13 @@ function startUp()
 						modifier = getRandom(0, 2);  // 0 = projectile , 1 = burst, 2 = multi shot 
 						break;
 					case 1:
-						modifier = getRandom(0, 5);  // 3 = wall, 4 = floor, 5 = cone
+						modifier = getRandom(0, 5);  // 3 = AoE, 4 = cone
 						break;
 					case 2:
-						modifier = getRandom(0, 7); // 6 = targeted, 7 = beam
+						modifier = getRandom(0, 6); // 5 = targeted, 6 = beam
 						break;
 					case 3:
-						modifier = getRandom(0, 9); // 8 = armor, 9 = AoE
+						modifier = getRandom(0, 7); // 7 = armor
 						break;
 				}
 				if (checkSpellModifier(spell, modifier))
@@ -95,70 +95,56 @@ function startUp()
 				}
 				else if (mod == 0) // check for conflicts with projectile 
 				{
-					if (spell.type[i] == 3 || spell.type[i] == 4 || spell.type[i] == 5 || spell.type[i] == 6 || spell.type[i] == 7 || spell.type[i] == 8 || spell.type[i] == 9)
+					if (spell.type[i] == 4 || spell.type[i] == 5 || spell.type[i] == 6)
 					{
 						valid = false;
 					}
 				}
 				else if (mod == 1) // check for conflicts with burst 
 				{
-					if (spell.type[i] == 7 || spell.type[i] == 8)
+					if (false)
 					{
 						valid = false;
 					}
 				}
 				else if (mod == 2) // check for conflicts with multi shot 
 				{
-					if (spell.type[i] == 3 || spell.type[i] == 5 || spell.type[i] == 6 || spell.type[i] == 8 || spell.type[i] == 9)
+					if (spell.type[i] == 4)
 					{
 						valid = false;
 					}
 				}
-				else if (mod == 3) // check for conflicts with wall
+				else if (mod == 3) // check for conflicts with AoE
 				{
-					if (spell.type[i] == 2 || spell.type[i] == 4 || spell.type[i] == 5 || spell.type[i] == 8 || spell.type[i] == 9)
+					if (false)
 					{
 						valid = false;
 					}
 				}
-				else if (mod == 4) // check for conflicts with floor
+				else if (mod == 4) // check for conflicts with cone
 				{
-					if (spell.type[i] == 3 || spell.type[i] == 5 || spell.type[i] == 7 || spell.type[i] == 8 || spell.type[i] == 9)
+					if (spell.type[i] == 0 || spell.type[i] == 2 || spell.type[i] == 5 || spell.type[i] == 6)
 					{
 						valid = false;
 					}
 				}
-				else if (mod == 5) // check for conflicts with cone
+				else if (mod == 5) // check for conflicts with targeted
 				{
-					if (spell.type[i] == 0 || spell.type[i] == 3 || spell.type[i] == 4 || spell.type[i] == 6 || spell.type[i] == 7 || spell.type[i] == 8 || spell.type[i] == 9)
+					if (spell.type[i] == 0 || spell.type[i] == 4 || spell.type[i] == 6)
 					{
 						valid = false;
 					}
 				}
-				else if (mod == 6) // check for conflicts with targeted
+				else if (mod == 6) // check for conflicts with beam
 				{
-					if (spell.type[i] == 0 || spell.type[i] == 1 || spell.type[i] == 2 || spell.type[i] == 5 || spell.type[i] == 7)
+					if (spell.type[i] == 0 || spell.type[i] == 4 || spell.type[i] == 5 )
 					{
 						valid = false;
 					}
 				}
-				else if (mod == 7) // check for conflicts with beam
+				else if (mod == 7) // check for conflicts with armor
 				{
-					if (spell.type[i] == 0 || spell.type[i] == 3 || spell.type[i] == 4 || spell.type[i] == 5 || spell.type[i] == 6 || spell.type[i] == 8 || spell.type[i] == 9)
-					{
-						valid = false;
-					}
-				}
-				else if (mod == 8) // check for conflicts with armor
-				{
-					if (spell.type[i] == 3 || spell.type[i] == 4 || spell.type[i] == 5)
-					{
-						valid = false;
-					}
-				}
-				else if (mod == 9) // check for conflicts with AoE
-				{
-					if (spell.type[i] == 3 || spell.type[i] == 4 || spell.type[i] == 5)
+					if (false)
 					{
 						valid = false;
 					}
@@ -211,25 +197,19 @@ function startUp()
 					readableSpells += ("Multi Shot");
 					break;
 				case 3:
-					readableSpells += ("Wall");
+					readableSpells += ("AoE");
 					break;
 				case 4:
-					readableSpells += ("Floor");
-					break;
-				case 5:
 					readableSpells += ("Cone");
 					break;
-				case 6:
+				case 5:
 					readableSpells += ("Targeted");
 					break;
-				case 7:
+				case 6:
 					readableSpells += ("Beam");
 					break;
-				case 8:
+				case 7:
 					readableSpells += ("Armor");
-					break;
-				case 9:
-					readableSpells += ("AoE");
 					break;
 				default:
 					readableSpells += ("Level range error");
