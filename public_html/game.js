@@ -9,10 +9,12 @@ function startUp()
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 		ctx.clearRect(gameZoneX, gameZoneY, gameCanvasWidth, gameCanvasHeight);
+		ctx.fillStyle = "rgb(77,77,77)";
+		ctx.fillRect(gameZoneX, gameZoneY,gameCanvasWidth,gameCanvasHeight);
 
 		//draw player
 		playerLogic();
-		drawBall(player, "rgb(255,0,0)");
+		drawBall(player, "rgb(0,0,0)");
 
 		if (clickLocation[0] != undefined && clickLocation[1] != undefined)
 		{
@@ -40,7 +42,6 @@ function startUp()
 			{
 				spell.active = true;
 				timer += 1;
-				console.log(timer);
 			}
 			else
 			{
@@ -119,8 +120,9 @@ function startUp()
 		{
 			this.element = 0;
 			this.type = [];
-			this.cooldown = 3;
+			this.cooldown = 0.3;
 			this.active = false;
+
 			this.x = 0;
 			this.y = 0;
 			this.targetX = 0;
@@ -142,7 +144,11 @@ function startUp()
 	function spellCast(x, y, activeSpell)
 	{
 		activeSpell.active = true;
-		var spell = activeSpell;
+		var spell = new spellObject();
+
+		spell.element = activeSpell.element;
+		spell.type = activeSpell.type;
+		spell.cooldown = activeSpell.type;
 
 		spell.x = player.x;
 		spell.y = player.y;
@@ -150,27 +156,40 @@ function startUp()
 		spell.targetY = y;
 
 		spellParticle.push(spell);
+
 	}
 
 	function activeSpell()
 	{
 		if (spellParticle[0] != undefined)
 		{
-//			console.log(spellParticle[0].targetX, spellParticle[0].x);
-//			console.log(spellParticle[0].targetY, spellParticle[0].y);
-
 			for (i = 0; i < spellParticle.length; i++)
 			{
 				entityMove(spellParticle[i].targetX, spellParticle[i].targetY, spellParticle[i]);
 
-				drawBall(spellParticle[i], "rgb(255,0,0)");
+				var color = "rgb(0,0,0)";
+
+				switch (spellParticle[i].element)
+				{
+					case 0: //fire
+						color = "rgba(249, 60, 31, 0.9)";
+						break;
+					case 1: //lightning
+						color = "rgba(230, 254, 77, 0.9)";
+						break;
+					case 2:
+						color = "rgba(74, 223, 246, 0.9)";
+						break;
+				}
+
+				drawBall(spellParticle[i], color);
 
 				if (spellParticle[i].x >= spellParticle[i].targetX - spellParticle[i].speed && spellParticle[i].x <= spellParticle[i].targetX + spellParticle[i].speed)
 				{
 					if (spellParticle[i].y >= spellParticle[i].targetY - spellParticle[i].speed && spellParticle[i].y <= spellParticle[i].targetY + spellParticle[i].speed)
 					{
 						removeObject(spellParticle[i], spellParticle);
-						console.log(spellParticle);
+						console.log(spellParticle.length);
 					}
 				}
 			}
@@ -191,12 +210,6 @@ function startUp()
 
 				entity.vx = Math.cos(Math.radians(entity.r)) * entity.speed;
 				entity.vy = Math.sin(Math.radians(entity.r)) * entity.speed;
-
-				if (entity.distance < entity.speed)
-				{
-					entity.vx = 0;
-					entity.vy = 0;
-				}
 
 				entity.x = entity.x - entity.vx;
 				entity.y = entity.y - entity.vy;
