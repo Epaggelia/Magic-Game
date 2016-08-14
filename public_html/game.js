@@ -11,6 +11,9 @@ function startUp()
 		ctx.clearRect(border / 4, border, canvas.width - border / 2, canvas.height - border * 2);
 	}
 
+	var clickLocation = [];
+//	var spaceKeyCode = 32;
+
 	var spells = [];
 	var readableSpells = [];
 
@@ -22,10 +25,67 @@ function startUp()
 		this.y = 0;
 	};
 
+	//Mouse click location code
+	{
+		function mouseLocation(e)
+		{
+			if (event.which == 1)
+			{
+				if (e.pageX != undefined && e.pageY != undefined)
+				{
+					x = e.pageX;
+					y = e.pageY;
+				}
+
+				x -= canvas.offsetLeft;
+				y -= canvas.offsetTop;
+
+				clickLocation = [Math.floor(x), Math.floor(y)];
+			}
+			addEventListener("mousemove", mouseMoved);
+		}
+
+		function buttonPressed(e)
+		{
+			if (e.buttons == null)
+				return e.which != 0;
+			else
+				return e.buttons != 0;
+		}
+		function mouseMoved(e)
+		{
+			if (!buttonPressed(e))
+			{
+				removeEventListener("mousemove", mouseMoved);
+			}
+			else
+			{
+				if (e.pageX != undefined && e.pageY != undefined)
+				{
+					x = e.pageX;
+					y = e.pageY;
+				}
+
+				x -= canvas.offsetLeft;
+				y -= canvas.offsetTop;
+
+				clickLocation = [Math.floor(x), Math.floor(y)];
+			}
+		}
+
+		function mouseReset()
+		{
+			clickLocation[0] = undefined;
+			clickLocation[1] = undefined;
+		}
+	}
+
 	function MakeSpell(rarity)
 	{
 		var spell = new spellObject();
 		var level = rarity;
+		if (level <= 0 || level >= 4)
+			level = 0;
 		var element = 0;
 		var modifier = 0;
 
@@ -230,6 +290,10 @@ function startUp()
 			console.log(spells[i]);
 			console.log(convertSpell(spells[i]));
 		}
+
+		canvas.addEventListener("mousedown", mouseLocation);
+		canvas.addEventListener("mouseup", mouseReset);
+
 		render();
 	}
 
