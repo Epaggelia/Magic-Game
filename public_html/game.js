@@ -14,19 +14,54 @@ function startUp()
 		playerLogic();
 		drawBall(player, "rgb(255,0,0)");
 
+		if (clickLocation[0] != undefined && clickLocation[1] != undefined)
+		{
+			if (!spells[0].active)
+			{
+				coolDownTimer(spells[0]);
+				spellCast(clickLocation[0], clickLocation[1], spells[0]);
+			}
+		}
+
+
+		activeSpell();
 
 		setTimeout(render, 33);
 	}
-	var border = 128;
 
-	var gameZoneX = border / 4;
-	var gameZoneY = border / 4;
-	var gameCanvasWidth = canvas.width - border / 2;
-	var gameCanvasHeight = canvas.height - border * 2;
+	var coolDownTimeInterval;
+
+	function coolDownTimer(spell)
+	{
+		var timer = 0;
+		coolDownTimeInterval = window.setInterval(function ()
+		{
+			if (timer != spell.cooldown * 10)
+			{
+				spell.active = true;
+				timer += 1;
+				console.log(timer);
+			}
+			else
+			{
+				spell.active = false;
+				clearInterval(coolDownTimeInterval);
+			}
+		}, 100);
+	}
+// game canvas
+	{
+		var border = 128;
+
+		var gameZoneX = border / 4;
+		var gameZoneY = border / 4;
+		var gameCanvasWidth = canvas.width - border / 2;
+		var gameCanvasHeight = canvas.height - border * 2;
+	}
 
 	var clickLocation = [];
 
-	// key value variables
+// key value variables
 	{
 		var spaceKeyCode = 32;
 
@@ -47,7 +82,7 @@ function startUp()
 		var numBar0 = 48;
 	}
 
-	// Player creation stuff
+// Player creation stuff
 	{
 		var player;
 		var playerSpeed = 4;
@@ -74,21 +109,102 @@ function startUp()
 		player = new Player(gameZoneX + gameCanvasHeight / 2, gameZoneY + gameCanvasHeight / 2);
 	}
 
-	// Spell creation stuff
+// Spell creation stuff
 	{
 		var spells = [];
+		var spellParticle = [];
 		var readableSpells = [];
 
 		var spellObject = function ()
 		{
 			this.element = 0;
 			this.type = [];
+			this.cooldown = 3;
+			this.active = false;
 			this.x = 0;
 			this.y = 0;
+			this.targetX = 0;
+			this.targetY = 0;
+			this.width = 10;
+			this.height = 10;
+			this.halfWidth = this.width / 2;
+			this.halfHeight = this.height / 2;
+
+			this.distance = 0;
+			this.r = 0;
+
+			this.vx = 0;
+			this.vy = 0;
+			this.speed = 5;
 		};
 	}
 
-	// player movement logic
+	function spellCast(x, y, activeSpell)
+	{
+		activeSpell.active = true;
+		var spell = activeSpell;
+
+		spell.x = player.x;
+		spell.y = player.y;
+		spell.targetX = x;
+		spell.targetY = y;
+
+		spellParticle.push(spell);
+	}
+
+	function activeSpell()
+	{
+		if (spellParticle[0] != undefined)
+		{
+//			console.log(spellParticle[0].targetX, spellParticle[0].x);
+//			console.log(spellParticle[0].targetY, spellParticle[0].y);
+
+			for (i = 0; i < spellParticle.length; i++)
+			{
+				entityMove(spellParticle[i].targetX, spellParticle[i].targetY, spellParticle[i]);
+
+				drawBall(spellParticle[i], "rgb(255,0,0)");
+
+				if (spellParticle[i].x >= spellParticle[i].targetX - spellParticle[i].speed && spellParticle[i].x <= spellParticle[i].targetX + spellParticle[i].speed)
+				{
+					if (spellParticle[i].y >= spellParticle[i].targetY - spellParticle[i].speed && spellParticle[i].y <= spellParticle[i].targetY + spellParticle[i].speed)
+					{
+						removeObject(spellParticle[i], spellParticle);
+						console.log(spellParticle);
+					}
+				}
+			}
+		}
+	}
+
+	function entityMove(x, y, entity)
+	{
+		if (!isNaN(x) && !isNaN(y))
+		{
+			var dx = entity.x - x;
+			var dy = entity.y - y;
+
+			if (dx != 0 && dy != 0)
+			{
+				entity.distance = Math.floor(Math.sqrt((dx * dx) + (dy * dy)));
+				entity.r = Math.degrees(Math.atan2(dy, dx));
+
+				entity.vx = Math.cos(Math.radians(entity.r)) * entity.speed;
+				entity.vy = Math.sin(Math.radians(entity.r)) * entity.speed;
+
+				if (entity.distance < entity.speed)
+				{
+					entity.vx = 0;
+					entity.vy = 0;
+				}
+
+				entity.x = entity.x - entity.vx;
+				entity.y = entity.y - entity.vy;
+			}
+		}
+	}
+
+// player movement logic
 	function playerLogic()
 	{
 		//stops movement when not pressing keys
@@ -472,7 +588,7 @@ function startUp()
 
 			for (i = 0; i < spells.length; i++)
 			{
-//				console.log(spells[i]);
+				console.log(spells[i]);
 				console.log("Starter Spell:\n" + convertSpell(spells[i]));
 			}
 
