@@ -2,13 +2,13 @@ function startUp()
 {
 	var canvas = document.querySelector("canvas");
 	var ctx = canvas.getContext("2d");
-
 	function render()
 	{
 		ctx.fillStyle = "rgb(0,0,0)";
 		ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 		ctx.clearRect(gameZoneX, gameZoneY, gameCanvasWidth, gameCanvasHeight);
+
 		ctx.fillStyle = "rgb(77,77,77)";
 		ctx.fillRect(gameZoneX, gameZoneY, gameCanvasWidth, gameCanvasHeight);
 
@@ -24,14 +24,11 @@ function startUp()
 		//draw player
 		playerLogic();
 		drawBall(player, "rgb(0,0,0)");
-
 		activeSpell();
-
 		setTimeout(render, 33);
 	}
 
 	var coolDownTimeInterval;
-
 	function coolDownTimer(spell)
 	{
 		var timer = 0;
@@ -52,7 +49,6 @@ function startUp()
 // game canvas
 	{
 		var border = 128;
-
 		var gameZoneX = border / 4;
 		var gameZoneY = border / 4;
 		var gameCanvasWidth = canvas.width - border / 2;
@@ -60,16 +56,13 @@ function startUp()
 	}
 
 	var clickLocation = [];
-
 // key value variables
 	{
 		var spaceKeyCode = 32;
-
 		var wasdLeft = 65;
 		var wasdUp = 87;
 		var wasdDown = 83;
 		var wasdRight = 68;
-
 		var numBar1 = 49;
 		var numBar2 = 50;
 		var numBar3 = 51;
@@ -86,7 +79,6 @@ function startUp()
 	{
 		var player;
 		var playerSpeed = 4;
-
 		var Player = function (x, y)
 		{
 			this.x = x;
@@ -95,17 +87,14 @@ function startUp()
 			this.height = 24;
 			this.halfWidth = this.width / 2;
 			this.halfHeight = this.height / 2;
-
 			this.vx = 0;
 			this.vy = 0;
-
 			this.moveRight = false;
 			this.moveLeft = false;
 			this.moveUp = false;
 			this.moveDown = false;
 			this.interact = false;
 		};
-
 		player = new Player(gameZoneX + gameCanvasHeight / 2, gameZoneY + gameCanvasHeight / 2);
 	}
 
@@ -114,12 +103,11 @@ function startUp()
 		var spells = [];
 		var spellParticle = [];
 		var readableSpells = [];
-
 		var spellObject = function ()
 		{
 			this.element = 0;
 			this.type = [];
-			this.cooldown = 0.3;
+			this.cooldown = 0.5;
 			this.active = false;
 
 			this.x = 0;
@@ -130,6 +118,7 @@ function startUp()
 			this.height = 10;
 			this.halfWidth = this.width / 2;
 			this.halfHeight = this.height / 2;
+
 			this.particleCount = 1;
 
 			this.distance = 0;
@@ -145,11 +134,9 @@ function startUp()
 	{
 		activeSpell.active = true;
 		var spell = new spellObject();
-
 		spell.element = activeSpell.element;
 		spell.type = activeSpell.type;
 		spell.cooldown = activeSpell.type;
-
 		spell.x = player.x;
 		spell.y = player.y;
 		spell.targetX = x;
@@ -158,7 +145,6 @@ function startUp()
 		var projectile = false;
 		var burst = false;
 		var multiShot = false;
-
 		for (j = 0; j < spell.type.length; j++)
 		{
 			if (spell.type[j] == 0)
@@ -167,6 +153,11 @@ function startUp()
 				burst = true;
 			if (spell.type[j] == 2)
 				multiShot = true;
+		}
+
+		if (projectile || multiShot)
+		{
+			spellDirection(x, y, spell);
 		}
 
 		if (multiShot)
@@ -192,9 +183,7 @@ function startUp()
 				var projectile = false;
 				var burst = false;
 				var multiShot = false;
-
 				var color = "rgb(0,0,0)";
-
 				switch (spellParticle[i].element)
 				{
 					case 0: //fire
@@ -220,15 +209,12 @@ function startUp()
 
 				if (projectile || multiShot)
 				{
-					entityMove(spellParticle[i].targetX, spellParticle[i].targetY, spellParticle[i]);
+					projectileSpell(spellParticle[i]);
 					drawBall(spellParticle[i], color);
-					if (spellParticle[i].x >= spellParticle[i].targetX - spellParticle[i].speed && spellParticle[i].x <= spellParticle[i].targetX + spellParticle[i].speed)
+
+					if (spellCollision(spellParticle[i]))
 					{
-						if (spellParticle[i].y >= spellParticle[i].targetY - spellParticle[i].speed && spellParticle[i].y <= spellParticle[i].targetY + spellParticle[i].speed)
-						{
-							removeObject(spellParticle[i], spellParticle);
-							console.log(spellParticle.length);
-						}
+						removeObject(spellParticle[i], spellParticle);
 					}
 				}
 
@@ -248,6 +234,32 @@ function startUp()
 		}
 	}
 
+	function spellCollision(spell)
+	{
+		var edgeHit = false;
+
+		if (spell.x - spell.halfWidth < gameZoneX)
+		{
+			edgeHit = true;
+		}
+		else if (spell.x + spell.halfWidth > gameZoneX + gameCanvasWidth)
+		{
+			edgeHit = true;
+		}
+
+		//player movement borders -> Top and bottom
+		if (spell.y - spell.halfHeight < gameZoneY)
+		{
+			edgeHit = true;
+		}
+		else if (spell.y + spell.halfHeight > gameCanvasHeight + gameZoneY)
+		{
+			edgeHit = true;
+		}
+
+		return edgeHit;
+	}
+
 	function burstSpell(spell)
 	{
 		if (spell.halfWidth <= spell.width * 5)
@@ -260,26 +272,28 @@ function startUp()
 		}
 	}
 
-	function entityMove(x, y, entity)
+	function spellDirection(x, y, entity)
 	{
 		if (!isNaN(x) && !isNaN(y))
 		{
 			var dx = entity.x - x;
 			var dy = entity.y - y;
-
 			if (dx != 0 && dy != 0)
 			{
 				entity.distance = Math.floor(Math.sqrt((dx * dx) + (dy * dy)));
 				entity.r = Math.degrees(Math.atan2(dy, dx));
-
-				entity.vx = Math.cos(Math.radians(entity.r)) * entity.speed;
-				entity.vy = Math.sin(Math.radians(entity.r)) * entity.speed;
-
-				entity.x = entity.x - entity.vx;
-				entity.y = entity.y - entity.vy;
 			}
 		}
 	}
+
+	function projectileSpell(entity)
+	{
+		entity.vx = Math.cos(Math.radians(entity.r)) * entity.speed;
+		entity.vy = Math.sin(Math.radians(entity.r)) * entity.speed;
+		entity.x = entity.x - entity.vx;
+		entity.y = entity.y - entity.vy;
+	}
+
 
 // player movement logic
 	function playerLogic()
@@ -287,7 +301,6 @@ function startUp()
 		//stops movement when not pressing keys
 		player.vx = 0;
 		player.vy = 0;
-
 		//move right, left, up, down
 		if (player.moveRight)
 		{
@@ -308,7 +321,6 @@ function startUp()
 
 		player.x += player.vx;
 		player.y += player.vy;
-
 		//player movement borders -> left and right
 		if (player.x - player.halfWidth < gameZoneX)
 		{
@@ -341,11 +353,10 @@ function startUp()
 
 //game input - mouse location and keycodes
 	{
-		//keyboard input - keydown
+//keyboard input - keydown
 		function keyPressed(e)
 		{
 			var keyCode = e.keyCode;
-
 			if (keyCode === wasdRight)
 			{
 				player.moveRight = true;
@@ -368,11 +379,10 @@ function startUp()
 			}
 		}
 
-		//keyboard input - keyup
+//keyboard input - keyup
 		function keyReleased(e)
 		{
 			var keyCode = e.keyCode;
-
 			if (keyCode === wasdRight)
 			{
 				player.moveRight = false;
@@ -395,7 +405,7 @@ function startUp()
 			}
 		}
 
-		//Mouse click location code
+//Mouse click location code
 		{
 			function mouseLocation(e)
 			{
@@ -409,7 +419,6 @@ function startUp()
 
 					x -= canvas.offsetLeft;
 					y -= canvas.offsetTop;
-
 					clickLocation = [Math.floor(x), Math.floor(y)];
 				}
 				addEventListener("mousemove", mouseMoved);
@@ -438,7 +447,6 @@ function startUp()
 
 					x -= canvas.offsetLeft;
 					y -= canvas.offsetTop;
-
 					clickLocation = [Math.floor(x), Math.floor(y)];
 				}
 			}
@@ -461,14 +469,13 @@ function startUp()
 				level = 0;
 			var element = 0;
 			var modifier = 0;
-
 			switch (level)
 			{
 				case 0:
-					element = getRandom(0, 2);  // 0 = fire, 1 = lightning, 2 = water
+					element = getRandom(0, 2); // 0 = fire, 1 = lightning, 2 = water
 					break;
 				case 1:
-					element = getRandom(0, 4);  // 3 = earth, 4 = cold
+					element = getRandom(0, 4); // 3 = earth, 4 = cold
 					break;
 				case 2:
 					element = getRandom(0, 5); // 5 = life
@@ -480,17 +487,16 @@ function startUp()
 
 			spell.element = element;
 			modify();
-
 			function modify()
 			{
 				for (i = 0; i <= level; i++)
 				{
 					switch (level) {
 						case 0:
-							modifier = getRandom(0, 2);  // 0 = projectile , 1 = burst, 2 = multi shot 
+							modifier = getRandom(0, 2); // 0 = projectile , 1 = burst, 2 = multi shot 
 							break;
 						case 1:
-							modifier = getRandom(0, 5);  // 3 = AoE, 4 = cone
+							modifier = getRandom(0, 5); // 3 = AoE, 4 = cone
 							break;
 						case 2:
 							modifier = getRandom(0, 6); // 5 = targeted, 6 = beam
@@ -519,7 +525,6 @@ function startUp()
 		{
 //			console.log("checking spell: " + spells.length);
 			var valid = true;
-
 			if (spell.type.length > 0)
 			{
 				for (i = 0; i < spell.type.length; i++)
@@ -660,9 +665,7 @@ function startUp()
 		{
 			window.addEventListener("keydown", keyPressed);
 			window.addEventListener('keyup', keyReleased);
-
 			MakeSpell(0);
-
 			for (i = 0; i < spells.length; i++)
 			{
 				console.log(spells[i]);
@@ -671,7 +674,6 @@ function startUp()
 
 			canvas.addEventListener("mousedown", mouseLocation);
 			canvas.addEventListener("mouseup", mouseReset);
-
 			render();
 		}
 	}
