@@ -209,25 +209,46 @@ function startUp()
 
 				if (projectile || multiShot)
 				{
-					projectileSpell(spellParticle[i]);
-					drawBall(spellParticle[i], color);
-
-					if (spellCollision(spellParticle[i]))
+					if (spellCollision(spellParticle[i]) && !burst)
 					{
 						removeObject(spellParticle[i], spellParticle);
+					}
+					else if (!spellCollision(spellParticle[i]))
+					{
+						projectileSpell(spellParticle[i]);
+						drawBall(spellParticle[i], color);
 					}
 				}
 
 				if (burst)
 				{
-					burstSpell(spellParticle[i]);
-					if (burstSpell(spellParticle[i]))
+					if (projectile || multiShot)
 					{
-						removeObject(spellParticle[i], spellParticle);
+						drawBall(spellParticle[i], color);
+						if (spellCollision(spellParticle[i]))
+						{
+							burstSpell(spellParticle[i]);
+							if (burstSpell(spellParticle[i]))
+							{
+								removeObject(spellParticle[i], spellParticle);
+							}
+							else
+							{
+								drawBall(spellParticle[i], color);
+							}
+						}
 					}
 					else
 					{
-						drawBall(spellParticle[i], color);
+						burstSpell(spellParticle[i]);
+						if (burstSpell(spellParticle[i]))
+						{
+							removeObject(spellParticle[i], spellParticle);
+						}
+						else
+						{
+							drawBall(spellParticle[i], color);
+						}
 					}
 				}
 			}
@@ -247,7 +268,6 @@ function startUp()
 			edgeHit = true;
 		}
 
-		//player movement borders -> Top and bottom
 		if (spell.y - spell.halfHeight < gameZoneY)
 		{
 			edgeHit = true;
@@ -665,7 +685,7 @@ function startUp()
 		{
 			window.addEventListener("keydown", keyPressed);
 			window.addEventListener('keyup', keyReleased);
-			MakeSpell(0);
+			MakeSpell(3);
 			for (i = 0; i < spells.length; i++)
 			{
 				console.log(spells[i]);
