@@ -10,11 +10,7 @@ function startUp()
 
 		ctx.clearRect(gameZoneX, gameZoneY, gameCanvasWidth, gameCanvasHeight);
 		ctx.fillStyle = "rgb(77,77,77)";
-		ctx.fillRect(gameZoneX, gameZoneY,gameCanvasWidth,gameCanvasHeight);
-
-		//draw player
-		playerLogic();
-		drawBall(player, "rgb(0,0,0)");
+		ctx.fillRect(gameZoneX, gameZoneY, gameCanvasWidth, gameCanvasHeight);
 
 		if (clickLocation[0] != undefined && clickLocation[1] != undefined)
 		{
@@ -25,6 +21,9 @@ function startUp()
 			}
 		}
 
+		//draw player
+		playerLogic();
+		drawBall(player, "rgb(0,0,0)");
 
 		activeSpell();
 
@@ -131,13 +130,14 @@ function startUp()
 			this.height = 10;
 			this.halfWidth = this.width / 2;
 			this.halfHeight = this.height / 2;
+			this.particleCount = 1;
 
 			this.distance = 0;
 			this.r = 0;
 
 			this.vx = 0;
 			this.vy = 0;
-			this.speed = 5;
+			this.speed = 7;
 		};
 	}
 
@@ -155,8 +155,32 @@ function startUp()
 		spell.targetX = x;
 		spell.targetY = y;
 
-		spellParticle.push(spell);
+		var projectile = false;
+		var burst = false;
+		var multiShot = false;
 
+		for (j = 0; j < spell.type.length; j++)
+		{
+			if (spell.type[j] == 0)
+				projectile = true;
+			if (spell.type[j] == 1)
+				burst = true;
+			if (spell.type[j] == 2)
+				multiShot = true;
+		}
+
+		if (multiShot)
+		{
+			spell.speed = spell.speed / spell.particleCount;
+			for (i = 0; i <= spell.particleCount; i++)
+			{
+				spellParticle.push(spell);
+			}
+		}
+		else
+		{
+			spellParticle.push(spell);
+		}
 	}
 
 	function activeSpell()
@@ -165,7 +189,9 @@ function startUp()
 		{
 			for (i = 0; i < spellParticle.length; i++)
 			{
-				entityMove(spellParticle[i].targetX, spellParticle[i].targetY, spellParticle[i]);
+				var projectile = false;
+				var burst = false;
+				var multiShot = false;
 
 				var color = "rgb(0,0,0)";
 
@@ -177,22 +203,60 @@ function startUp()
 					case 1: //lightning
 						color = "rgba(230, 254, 77, 0.9)";
 						break;
-					case 2:
-						color = "rgba(74, 223, 246, 0.9)";
+					case 2: //water
+						color = "rgba(74, 223, 246, 0.6)";
 						break;
 				}
 
-				drawBall(spellParticle[i], color);
-
-				if (spellParticle[i].x >= spellParticle[i].targetX - spellParticle[i].speed && spellParticle[i].x <= spellParticle[i].targetX + spellParticle[i].speed)
+				for (j = 0; j < spellParticle[i].type.length; j++)
 				{
-					if (spellParticle[i].y >= spellParticle[i].targetY - spellParticle[i].speed && spellParticle[i].y <= spellParticle[i].targetY + spellParticle[i].speed)
+					if (spellParticle[i].type[j] == 0)
+						projectile = true;
+					if (spellParticle[i].type[j] == 1)
+						burst = true;
+					if (spellParticle[i].type[j] == 2)
+						multiShot = true;
+				}
+
+				if (projectile || multiShot)
+				{
+					entityMove(spellParticle[i].targetX, spellParticle[i].targetY, spellParticle[i]);
+					drawBall(spellParticle[i], color);
+					if (spellParticle[i].x >= spellParticle[i].targetX - spellParticle[i].speed && spellParticle[i].x <= spellParticle[i].targetX + spellParticle[i].speed)
+					{
+						if (spellParticle[i].y >= spellParticle[i].targetY - spellParticle[i].speed && spellParticle[i].y <= spellParticle[i].targetY + spellParticle[i].speed)
+						{
+							removeObject(spellParticle[i], spellParticle);
+							console.log(spellParticle.length);
+						}
+					}
+				}
+
+				if (burst)
+				{
+					burstSpell(spellParticle[i]);
+					if (burstSpell(spellParticle[i]))
 					{
 						removeObject(spellParticle[i], spellParticle);
-						console.log(spellParticle.length);
+					}
+					else
+					{
+						drawBall(spellParticle[i], color);
 					}
 				}
 			}
+		}
+	}
+
+	function burstSpell(spell)
+	{
+		if (spell.halfWidth <= spell.width * 5)
+		{
+			spell.halfWidth += 4;
+		}
+		else
+		{
+			return true;
 		}
 	}
 
