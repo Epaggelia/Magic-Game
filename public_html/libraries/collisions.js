@@ -1,5 +1,5 @@
 /**
- * checks to see if am x and y cord is in a SpriteObject
+ * checks to see if an x and y cord is in a SpriteObject
  * @param {int} px x of point
  * @param {int} py y of point
  * @param {SpriteObject} r SpriteObject checking hit on
