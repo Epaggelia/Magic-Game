@@ -5,9 +5,13 @@ function startUp()
 	function render()
 	{
 		ctx.fillStyle = "rgb(0,0,0)";
-		ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-		ctx.clearRect(gameZoneX, gameZoneY, gameCanvasWidth, gameCanvasHeight);
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+		for (i = 0; i < borders.length; i++)
+		{
+			ctx.fillRect(borders[i].x, borders[i].y, borders[i].w, borders[i].h);
+		}
 
 		ctx.fillStyle = "rgb(77,77,77)";
 		ctx.fillRect(gameZoneX, gameZoneY, gameCanvasWidth, gameCanvasHeight);
@@ -75,6 +79,26 @@ function startUp()
 		var numBar0 = 48;
 	}
 
+// walls
+	{
+		var borders = [];
+
+		var wall = function (x, y, w, h)
+		{
+			this.x = x;
+			this.y = y;
+			this.w = w;
+			this.h = h;
+			this.halfWidth = this.w / 2;
+			this.halfHeight = this.h / 2;
+		};
+
+		borders[0] = new wall(0, 0, canvas.width, gameZoneY);
+		borders[1] = new wall(0, 0, gameZoneX, canvas.height);
+		borders[2] = new wall(canvas.width, 0, -gameZoneX, canvas.height);
+		borders[3] = new wall(0, canvas.height - gameCanvasHeight - gameZoneY, canvas.width, canvas.height);
+	}
+
 // Player creation stuff
 	{
 		var player;
@@ -83,10 +107,10 @@ function startUp()
 		{
 			this.x = x;
 			this.y = y;
-			this.width = 24;
-			this.height = 24;
-			this.halfWidth = this.width / 2;
-			this.halfHeight = this.height / 2;
+			this.w = 24;
+			this.h = 24;
+			this.halfWidth = this.w / 2;
+			this.halfHeight = this.h / 2;
 			this.vx = 0;
 			this.vy = 0;
 			this.moveRight = false;
@@ -115,10 +139,10 @@ function startUp()
 			this.y = 0;
 			this.targetX = 0;
 			this.targetY = 0;
-			this.width = 10;
-			this.height = 10;
-			this.halfWidth = this.width / 2;
-			this.halfHeight = this.height / 2;
+			this.w = 10;
+			this.h = 10;
+			this.halfWidth = this.w / 2;
+			this.halfHeight = this.h / 2;
 
 			this.particleCount = 1;
 
@@ -163,7 +187,7 @@ function startUp()
 		{
 			spellDirection(x, y, spell);
 		}
-		
+
 		if (multiShot)
 		{
 			spell.speed = spell.speed / spell.particleCount;
@@ -174,7 +198,7 @@ function startUp()
 		}
 		else
 		{
-			spellParticle.push(spell);
+			spellParticle.push(spell = new SpriteObject());
 		}
 	}
 
@@ -283,30 +307,17 @@ function startUp()
 	{
 		var edgeHit = false;
 
-		if (spell.x - spell.halfWidth < gameZoneX)
+		for (i = 0; i < borders.length; i++)
 		{
-			edgeHit = true;
+//			if (hitTestRectangle(spell, borders[i]))
+//				edgeHit = true;
 		}
-		else if (spell.x + spell.halfWidth > gameZoneX + gameCanvasWidth)
-		{
-			edgeHit = true;
-		}
-
-		if (spell.y - spell.halfHeight < gameZoneY)
-		{
-			edgeHit = true;
-		}
-		else if (spell.y + spell.halfHeight > gameCanvasHeight + gameZoneY)
-		{
-			edgeHit = true;
-		}
-
 		return edgeHit;
 	}
 
 	function burstSpell(spell)
 	{
-		if (spell.halfWidth <= spell.width * 5)
+		if (spell.halfWidth <= spell.w * 5)
 		{
 			spell.halfWidth += 4;
 		}
@@ -322,8 +333,8 @@ function startUp()
 		{
 			var dx = spell.x - x;
 			var dy = spell.y - y;
-				spell.distance = Math.floor(Math.sqrt((dx * dx) + (dy * dy)));
-				spell.r = Math.degrees(Math.atan2(dy, dx));
+			spell.distance = Math.floor(Math.sqrt((dx * dx) + (dy * dy)));
+			spell.r = Math.degrees(Math.atan2(dy, dx));
 		}
 	}
 
@@ -339,11 +350,11 @@ function startUp()
 	{
 		ctx.save();
 		ctx.fillStyle = color;
-		ctx.translate(player.x,player.y);
+		ctx.translate(player.x, player.y);
 		ctx.rotate(Math.radians(spell.r));
-		ctx.fillRect(0,-2,-gameCanvasWidth,4);
+		ctx.fillRect(0, -2, -gameCanvasWidth, 4);
 		ctx.restore();
-		
+
 	}
 
 	function drawBall(object, color)
