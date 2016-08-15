@@ -108,7 +108,7 @@ function startUp()
 		{
 			this.element = 0;
 			this.type = [];
-			this.cooldown = 0.3;
+			this.cooldown = 0;
 			this.active = false;
 
 			this.x = 0;
@@ -322,11 +322,8 @@ function startUp()
 		{
 			var dx = spell.x - x;
 			var dy = spell.y - y;
-			if (dx != 0 && dy != 0)
-			{
 				spell.distance = Math.floor(Math.sqrt((dx * dx) + (dy * dy)));
 				spell.r = Math.degrees(Math.atan2(dy, dx));
-			}
 		}
 	}
 
