@@ -103,11 +103,12 @@ function startUp()
 		var spells = [];
 		var spellParticle = [];
 		var readableSpells = [];
+
 		var spellObject = function ()
 		{
 			this.element = 0;
 			this.type = [];
-			this.cooldown = 0.5;
+			this.cooldown = 0.3;
 			this.active = false;
 
 			this.x = 0;
@@ -145,6 +146,7 @@ function startUp()
 		var projectile = false;
 		var burst = false;
 		var multiShot = false;
+		var beam = false;
 		for (j = 0; j < spell.type.length; j++)
 		{
 			if (spell.type[j] == 0)
@@ -153,13 +155,15 @@ function startUp()
 				burst = true;
 			if (spell.type[j] == 2)
 				multiShot = true;
+			if (spell.type[j] == 6)
+				beam = true;
 		}
 
-		if (projectile || multiShot)
+		if (projectile || multiShot || beam)
 		{
 			spellDirection(x, y, spell);
 		}
-
+		
 		if (multiShot)
 		{
 			spell.speed = spell.speed / spell.particleCount;
@@ -183,6 +187,7 @@ function startUp()
 				var projectile = false;
 				var burst = false;
 				var multiShot = false;
+				var beam = false;
 				var color = "rgb(0,0,0)";
 				switch (spellParticle[i].element)
 				{
@@ -193,7 +198,19 @@ function startUp()
 						color = "rgba(230, 254, 77, 0.9)";
 						break;
 					case 2: //water
-						color = "rgba(74, 223, 246, 0.6)";
+						color = "rgba(4, 119, 234, 0.6)";
+						break;
+					case 3: //earth
+						color = "rgba(150, 114, 79, 0.9)";
+						break;
+					case 4: //ice
+						color = "rgba(188, 250, 250, 0.9)";
+						break;
+					case 5: //life
+						color = "rgba(173, 241, 104, 0.9)";
+						break;
+					case 6: //death
+						color = "rgba(96, 29, 164, 0.9)";
 						break;
 				}
 
@@ -205,6 +222,8 @@ function startUp()
 						burst = true;
 					if (spellParticle[i].type[j] == 2)
 						multiShot = true;
+					if (spellParticle[i].type[j] == 6)
+						beam = true;
 				}
 
 				if (projectile || multiShot)
@@ -218,6 +237,11 @@ function startUp()
 						projectileSpell(spellParticle[i]);
 						drawBall(spellParticle[i], color);
 					}
+				}
+
+				if (beam && !spellCollision(spellParticle[i]))
+				{
+					beamSpell(spellParticle[i], color);
 				}
 
 				if (burst)
@@ -292,28 +316,47 @@ function startUp()
 		}
 	}
 
-	function spellDirection(x, y, entity)
+	function spellDirection(x, y, spell)
 	{
 		if (!isNaN(x) && !isNaN(y))
 		{
-			var dx = entity.x - x;
-			var dy = entity.y - y;
+			var dx = spell.x - x;
+			var dy = spell.y - y;
 			if (dx != 0 && dy != 0)
 			{
-				entity.distance = Math.floor(Math.sqrt((dx * dx) + (dy * dy)));
-				entity.r = Math.degrees(Math.atan2(dy, dx));
+				spell.distance = Math.floor(Math.sqrt((dx * dx) + (dy * dy)));
+				spell.r = Math.degrees(Math.atan2(dy, dx));
 			}
 		}
 	}
 
-	function projectileSpell(entity)
+	function projectileSpell(spell)
 	{
-		entity.vx = Math.cos(Math.radians(entity.r)) * entity.speed;
-		entity.vy = Math.sin(Math.radians(entity.r)) * entity.speed;
-		entity.x = entity.x - entity.vx;
-		entity.y = entity.y - entity.vy;
+		spell.vx = Math.cos(Math.radians(spell.r)) * spell.speed;
+		spell.vy = Math.sin(Math.radians(spell.r)) * spell.speed;
+		spell.x = spell.x - spell.vx;
+		spell.y = spell.y - spell.vy;
 	}
 
+	function beamSpell(spell, color)
+	{
+		ctx.save();
+		ctx.fillStyle = color;
+		ctx.translate(player.x,player.y);
+		ctx.rotate(Math.radians(spell.r));
+		ctx.fillRect(0,-2,-gameCanvasWidth,4);
+		ctx.restore();
+		
+	}
+
+	function drawBall(object, color)
+	{
+		ctx.fillStyle = color;
+		ctx.beginPath();
+		ctx.arc(object.x, object.y, object.halfWidth, 0, Math.PI * 2, true);
+		ctx.closePath();
+		ctx.fill();
+	}
 
 // player movement logic
 	function playerLogic()
@@ -360,15 +403,6 @@ function startUp()
 		{
 			player.y = gameZoneY + gameCanvasHeight - player.halfHeight;
 		}
-	}
-
-	function drawBall(object, color)
-	{
-		ctx.fillStyle = color;
-		ctx.beginPath();
-		ctx.arc(object.x, object.y, object.halfWidth, 0, Math.PI * 2, true);
-		ctx.closePath();
-		ctx.fill();
 	}
 
 //game input - mouse location and keycodes
@@ -685,7 +719,9 @@ function startUp()
 		{
 			window.addEventListener("keydown", keyPressed);
 			window.addEventListener('keyup', keyReleased);
+
 			MakeSpell(3);
+
 			for (i = 0; i < spells.length; i++)
 			{
 				console.log(spells[i]);
