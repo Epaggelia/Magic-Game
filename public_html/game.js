@@ -83,20 +83,15 @@ function startUp()
 	{
 		var borders = [];
 
-		var wall = function (x, y, w, h)
-		{
-			this.x = x;
-			this.y = y;
-			this.w = w;
-			this.h = h;
-			this.halfWidth = this.w / 2;
-			this.halfHeight = this.h / 2;
-		};
+		var wall_0 = new simpleRect(0, 0, canvas.width, gameZoneY);
+		var wall_1 = new simpleRect(0, 0, gameZoneX, canvas.height);
+		var wall_2 = new simpleRect(canvas.width, 0, -gameZoneX, canvas.height);
+		var wall_3 = new simpleRect(0, canvas.height - gameCanvasHeight - gameZoneY, canvas.width, canvas.height);
 
-		borders[0] = new wall(0, 0, canvas.width, gameZoneY);
-		borders[1] = new wall(0, 0, gameZoneX, canvas.height);
-		borders[2] = new wall(canvas.width, 0, -gameZoneX, canvas.height);
-		borders[3] = new wall(0, canvas.height - gameCanvasHeight - gameZoneY, canvas.width, canvas.height);
+		borders.push(wall_0);
+		borders.push(wall_1);
+		borders.push(wall_2);
+		borders.push(wall_3);
 	}
 
 // Player creation stuff
@@ -128,77 +123,48 @@ function startUp()
 		var spellParticle = [];
 		var readableSpells = [];
 
-		var spellObject = function ()
+
+		function spellCast(x, y, activeSpell)
 		{
-			this.element = 0;
-			this.type = [];
-			this.cooldown = 0;
-			this.active = false;
+			activeSpell.active = true;
 
-			this.x = 0;
-			this.y = 0;
-			this.targetX = 0;
-			this.targetY = 0;
-			this.w = 10;
-			this.h = 10;
-			this.halfWidth = this.w / 2;
-			this.halfHeight = this.h / 2;
-
-			this.particleCount = 1;
-
-			this.distance = 0;
-			this.r = 0;
-
-			this.vx = 0;
-			this.vy = 0;
-			this.speed = 7;
-		};
-	}
-
-	function spellCast(x, y, activeSpell)
-	{
-		activeSpell.active = true;
-		var spell = new spellObject();
-		spell.element = activeSpell.element;
-		spell.type = activeSpell.type;
-		spell.cooldown = activeSpell.type;
-		spell.x = player.x;
-		spell.y = player.y;
-		spell.targetX = x;
-		spell.targetY = y;
-
-		var projectile = false;
-		var burst = false;
-		var multiShot = false;
-		var beam = false;
-		for (j = 0; j < spell.type.length; j++)
-		{
-			if (spell.type[j] == 0)
-				projectile = true;
-			if (spell.type[j] == 1)
-				burst = true;
-			if (spell.type[j] == 2)
-				multiShot = true;
-			if (spell.type[j] == 6)
-				beam = true;
-		}
-
-		if (projectile || multiShot || beam)
-		{
-			spellDirection(x, y, spell);
-		}
-
-		if (multiShot)
-		{
-			spell.speed = spell.speed / spell.particleCount;
-			for (i = 0; i <= spell.particleCount; i++)
+			var projectile = false;
+			var burst = false;
+			var multiShot = false;
+			var beam = false;
+			for (j = 0; j < activeSpell.type.length; j++)
 			{
-				spellParticle.push(spell);
+				if (activeSpell.type[j] == 0)
+					projectile = true;
+				if (activeSpell.type[j] == 1)
+					burst = true;
+				if (activeSpell.type[j] == 2)
+					multiShot = true;
+				if (activeSpell.type[j] == 6)
+					beam = true;
 			}
-		}
-		else
-		{
-			spellParticle.push(spell = new SpriteObject());
+
+			if (projectile || multiShot || beam)
+			{
+				spellDirection(x, y, activeSpell);
+			}
+
+//			if (multiShot)
+//			{
+//				activeSpell.speed = activeSpell.speed / activeSpell.particleCount;
+//				for (i = 0; i < activeSpell.particleCount; i++)
+//				{
+//					spellParticle.push(activeSpell);
+//				}
+//			}
+//			else
+//			{
+//
+//			}
+			spellParticle.push(activeSpell);
+			console.log(spellParticle[0]);
+			console.log(spellParticle[1]);
+			console.log(spellParticle[2]);
 		}
 	}
 
@@ -212,7 +178,9 @@ function startUp()
 				var burst = false;
 				var multiShot = false;
 				var beam = false;
+				
 				var color = "rgb(0,0,0)";
+				
 				switch (spellParticle[i].element)
 				{
 					case 0: //fire
@@ -263,10 +231,10 @@ function startUp()
 					}
 				}
 
-				if (beam && !spellCollision(spellParticle[i]))
-				{
-					beamSpell(spellParticle[i], color);
-				}
+//				if (beam)
+//				{
+//					beamSpell(spellParticle[i], color);
+//				}
 
 				if (burst)
 				{
@@ -309,17 +277,18 @@ function startUp()
 
 		for (i = 0; i < borders.length; i++)
 		{
-//			if (hitTestRectangle(spell, borders[i]))
-//				edgeHit = true;
+			if (hitTestRectangle(spell, borders[i]))
+				edgeHit = true;
 		}
 		return edgeHit;
 	}
 
 	function burstSpell(spell)
 	{
-		if (spell.halfWidth <= spell.w * 5)
+		console.log(spell.w);
+		if (spell.w <= spell.h * spell.AOEsize)
 		{
-			spell.halfWidth += 4;
+			spell.w += 4;
 		}
 		else
 		{
@@ -525,7 +494,21 @@ function startUp()
 	{
 		function MakeSpell(rarity)
 		{
-			var spell = new spellObject();
+			var spell = new SpriteObject();
+			spell.element = 0;
+			spell.type = [];
+			spell.cooldown = 0;
+			spell.active = false;
+
+			spell.targetX = 0;
+			spell.targetY = 0;
+
+			spell.particleCount = 1;
+			spell.AOEsize = 5;
+
+			spell.speed = 7;
+
+
 			var level = rarity;
 			if (level <= 0 || level >= 4)
 				level = 0;
@@ -579,13 +562,11 @@ function startUp()
 					}
 				}
 			}
-
 			spells.push(spell);
 		}
 
 		function checkSpellModifier(spell, mod)
 		{
-//			console.log("checking spell: " + spells.length);
 			var valid = true;
 			if (spell.type.length > 0)
 			{
