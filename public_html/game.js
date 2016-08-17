@@ -29,6 +29,7 @@ function startUp()
 		playerLogic();
 		drawBall(player, "rgb(0,0,0)");
 		activeSpell();
+
 		setTimeout(render, 33);
 	}
 
@@ -50,6 +51,7 @@ function startUp()
 			}
 		}, 100);
 	}
+
 // game canvas
 	{
 		var border = 128;
@@ -85,8 +87,8 @@ function startUp()
 
 		var wall_0 = new simpleRect(0, 0, canvas.width, gameZoneY);
 		var wall_1 = new simpleRect(0, 0, gameZoneX, canvas.height);
-		var wall_2 = new simpleRect(canvas.width, 0, -gameZoneX, canvas.height);
-		var wall_3 = new simpleRect(0, canvas.height - gameCanvasHeight - gameZoneY, canvas.width, canvas.height);
+		var wall_2 = new simpleRect(canvas.width - gameZoneX, 0, gameZoneX, canvas.height);
+		var wall_3 = new simpleRect(0, gameCanvasHeight + gameZoneY, canvas.width, canvas.height - gameCanvasHeight - gameZoneY);
 
 		borders.push(wall_0);
 		borders.push(wall_1);
@@ -96,25 +98,17 @@ function startUp()
 
 // Player creation stuff
 	{
-		var player;
 		var playerSpeed = 4;
-		var Player = function (x, y)
-		{
-			this.x = x;
-			this.y = y;
-			this.w = 24;
-			this.h = 24;
-			this.halfWidth = this.w / 2;
-			this.halfHeight = this.h / 2;
-			this.vx = 0;
-			this.vy = 0;
-			this.moveRight = false;
-			this.moveLeft = false;
-			this.moveUp = false;
-			this.moveDown = false;
-			this.interact = false;
-		};
-		player = new Player(gameZoneX + gameCanvasHeight / 2, gameZoneY + gameCanvasHeight / 2);
+		var player = new simpleRect(gameZoneX + gameCanvasHeight / 2, gameZoneY + gameCanvasHeight / 2, 24, 24);
+
+		player.vx = 0;
+		player.vy = 0;
+
+		player.moveRight = false;
+		player.moveLeft = false;
+		player.moveUp = false;
+		player.moveDown = false;
+		player.interact = false;
 	}
 
 // Spell creation stuff
@@ -123,48 +117,50 @@ function startUp()
 		var spellParticle = [];
 		var readableSpells = [];
 
-
 		function spellCast(x, y, activeSpell)
 		{
 			activeSpell.active = true;
+			var spell = activeSpell;
+
+			spell.x = player.x;
+			spell.y = player.y;
+			spell.targetX = x;
+			spell.targetY = y;
 
 			var projectile = false;
 			var burst = false;
 			var multiShot = false;
 			var beam = false;
-			for (j = 0; j < activeSpell.type.length; j++)
+			for (j = 0; j < spell.type.length; j++)
 			{
-				if (activeSpell.type[j] == 0)
+				if (spell.type[j] == 0)
 					projectile = true;
-				if (activeSpell.type[j] == 1)
+				if (spell.type[j] == 1)
 					burst = true;
-				if (activeSpell.type[j] == 2)
+				if (spell.type[j] == 2)
 					multiShot = true;
-				if (activeSpell.type[j] == 6)
+				if (spell.type[j] == 6)
 					beam = true;
 			}
 
 			if (projectile || multiShot || beam)
 			{
-				spellDirection(x, y, activeSpell);
+				spellDirection(spell.targetX, spell.targetY, spell);
 			}
 
-//			if (multiShot)
-//			{
-//				activeSpell.speed = activeSpell.speed / activeSpell.particleCount;
-//				for (i = 0; i < activeSpell.particleCount; i++)
-//				{
-//					spellParticle.push(activeSpell);
-//				}
-//			}
-//			else
-//			{
-//
-//			}
-			spellParticle.push(activeSpell);
-			console.log(spellParticle[0]);
-			console.log(spellParticle[1]);
-			console.log(spellParticle[2]);
+			if (multiShot)
+			{
+				spell.particleCount = 3;
+				for (i = 0; i < spell.particleCount; i++)
+				{
+					spellParticle.push(spell);
+				}
+			}
+			else
+			{
+				spellParticle.push(spell);
+			}
+			console.log(spellParticle.length);
 		}
 	}
 
@@ -178,9 +174,9 @@ function startUp()
 				var burst = false;
 				var multiShot = false;
 				var beam = false;
-				
+
 				var color = "rgb(0,0,0)";
-				
+
 				switch (spellParticle[i].element)
 				{
 					case 0: //fire
@@ -218,52 +214,53 @@ function startUp()
 						beam = true;
 				}
 
-				if (projectile || multiShot)
+				if (projectile || multiShot)									//Projectile or MultiShot
 				{
-					if (spellCollision(spellParticle[i]) && !burst)
+					if (!spellCollision(spellParticle[i]))						//Not touching a wall
+						projectileSpell(spellParticle[i]);						//Move like a Projectile
+					if (!burst)													//Not explosive
 					{
-						removeObject(spellParticle[i], spellParticle);
-					}
-					else if (!spellCollision(spellParticle[i]))
-					{
-						projectileSpell(spellParticle[i]);
-						drawBall(spellParticle[i], color);
+						drawBall(spellParticle[i], color);						//Draw movements
+						if (spellCollision(spellParticle[i]))					//If touching a wall
+						{
+							removeObject(spellParticle[i], spellParticle);		//Remove ball
+						}
 					}
 				}
 
-//				if (beam)
-//				{
-//					beamSpell(spellParticle[i], color);
-//				}
-
-				if (burst)
+				if (beam && spellParticle[i] != undefined)						//Beam and spellParticle not already removed from the array
 				{
-					if (projectile || multiShot)
+					beamSpell(spellParticle[i], color);							//Make / draw beam
+				}
+
+				if (burst)														//Burst spell
+				{
+					if (projectile || multiShot)								//Also Projectile or MultiShot?
 					{
-						drawBall(spellParticle[i], color);
-						if (spellCollision(spellParticle[i]))
+						drawBall(spellParticle[i], color);						//draw the ball as it moves
+						if (spellCollision(spellParticle[i]))					//Ball hit a wall
 						{
-							burstSpell(spellParticle[i]);
-							if (burstSpell(spellParticle[i]))
+							burstSpell(spellParticle[i]);						//Start explosion
+							if (burstSpell(spellParticle[i]))					//Explosion complete?
 							{
-								removeObject(spellParticle[i], spellParticle);
+								removeObject(spellParticle[i], spellParticle);	//Remove ball
 							}
-							else
+							else												//Explosion not complete?
 							{
-								drawBall(spellParticle[i], color);
+								drawBall(spellParticle[i], color);				//Continue drawing things
 							}
 						}
 					}
-					else
+					else														//Not a Projectile or MultiShot?
 					{
-						burstSpell(spellParticle[i]);
-						if (burstSpell(spellParticle[i]))
+						burstSpell(spellParticle[i]);							//Just explode
+						if (burstSpell(spellParticle[i]))						//Explosion complete?
 						{
-							removeObject(spellParticle[i], spellParticle);
+							removeObject(spellParticle[i], spellParticle);		//Remove ball
 						}
-						else
+						else													//Explosion not complete?
 						{
-							drawBall(spellParticle[i], color);
+							drawBall(spellParticle[i], color);					//Continue drawing things
 						}
 					}
 				}
@@ -275,9 +272,9 @@ function startUp()
 	{
 		var edgeHit = false;
 
-		for (i = 0; i < borders.length; i++)
+		for (g = 0; g < borders.length; g++)
 		{
-			if (hitTestRectangle(spell, borders[i]))
+			if (hitTestRectangle(spell, borders[g]))
 				edgeHit = true;
 		}
 		return edgeHit;
@@ -285,7 +282,6 @@ function startUp()
 
 	function burstSpell(spell)
 	{
-		console.log(spell.w);
 		if (spell.w <= spell.h * spell.AOEsize)
 		{
 			spell.w += 4;
@@ -323,14 +319,13 @@ function startUp()
 		ctx.rotate(Math.radians(spell.r));
 		ctx.fillRect(0, -2, -gameCanvasWidth, 4);
 		ctx.restore();
-
 	}
 
 	function drawBall(object, color)
 	{
 		ctx.fillStyle = color;
 		ctx.beginPath();
-		ctx.arc(object.x, object.y, object.halfWidth, 0, Math.PI * 2, true);
+		ctx.arc(object.x, object.y, object.halfWidth(), 0, Math.PI * 2, true);
 		ctx.closePath();
 		ctx.fill();
 	}
@@ -342,6 +337,7 @@ function startUp()
 		player.vx = 0;
 		player.vy = 0;
 		//move right, left, up, down
+
 		if (player.moveRight)
 		{
 			player.vx = playerSpeed;
@@ -361,24 +357,26 @@ function startUp()
 
 		player.x += player.vx;
 		player.y += player.vy;
+
+
 		//player movement borders -> left and right
-		if (player.x - player.halfWidth < gameZoneX)
+		if (player.x - player.halfWidth() < gameZoneX)
 		{
-			player.x = player.halfWidth + gameZoneX;
+			player.x = player.halfWidth() + gameZoneX;
 		}
-		else if (player.x + player.halfWidth > gameZoneX + gameCanvasWidth)
+		else if (player.x + player.halfWidth() > gameZoneX + gameCanvasWidth)
 		{
-			player.x = gameZoneX + gameCanvasWidth - player.halfWidth;
+			player.x = gameZoneX + gameCanvasWidth - player.halfWidth();
 		}
 
 		//player movement borders -> Top and bottom
-		if (player.y - player.halfHeight < gameZoneY)
+		if (player.y - player.halfHeight() < gameZoneY)
 		{
-			player.y = gameZoneY + player.halfHeight;
+			player.y = gameZoneY + player.halfHeight();
 		}
-		else if (player.y + player.halfHeight > gameCanvasHeight + gameZoneY)
+		else if (player.y + player.halfHeight() > gameCanvasHeight + gameZoneY)
 		{
-			player.y = gameZoneY + gameCanvasHeight - player.halfHeight;
+			player.y = gameZoneY + gameCanvasHeight - player.halfHeight();
 		}
 	}
 
@@ -494,19 +492,23 @@ function startUp()
 	{
 		function MakeSpell(rarity)
 		{
-			var spell = new SpriteObject();
-			spell.element = 0;
-			spell.type = [];
-			spell.cooldown = 0;
-			spell.active = false;
+			var skill = new SpriteObject();
+			skill.element = 0;
+			skill.type = [];
+			skill.cooldown = 0.3;
+			skill.active = false;
 
-			spell.targetX = 0;
-			spell.targetY = 0;
+			skill.w = 8;
+			skill.h = 8;
+			skill.r = 0;
 
-			spell.particleCount = 1;
-			spell.AOEsize = 5;
+			skill.targetX = 0;
+			skill.targetY = 0;
 
-			spell.speed = 7;
+			skill.particleCount = 1;
+			skill.AOEsize = 5;
+
+			skill.speed = 7;
 
 
 			var level = rarity;
@@ -530,8 +532,9 @@ function startUp()
 					break;
 			}
 
-			spell.element = element;
+			skill.element = element;
 			modify();
+
 			function modify()
 			{
 				for (i = 0; i <= level; i++)
@@ -552,9 +555,9 @@ function startUp()
 						default:
 							console.log("invalid spell level.");
 					}
-					if (checkSpellModifier(spell, modifier))
+					if (checkSpellModifier(skill, modifier))
 					{
-						spell.type = spell.type.concat(modifier);
+						skill.type = skill.type.concat(modifier);
 					}
 					else
 					{
@@ -562,7 +565,7 @@ function startUp()
 					}
 				}
 			}
-			spells.push(spell);
+			spells.push(skill);
 		}
 
 		function checkSpellModifier(spell, mod)
